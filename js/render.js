@@ -89,7 +89,7 @@ function toggleHabit(hid, ev){
     await setDayHabit(key, hid, next);
   }).then(function(ok){
     if(!ok){ /* revert optimistic UI by re-rendering from true local state */ }
-    renderHome(); renderHabitList(); renderProgressPage(); renderHabitsPage();
+    renderHome(); renderHabitList(); renderTopHabits(); renderProgressPage(); renderHabitsPage();
   });
 }
 
@@ -143,7 +143,7 @@ function renderFlowChart(){
       type:'line',
       data:{ labels:labels, datasets:[{ data:data, borderColor:'#fff', borderWidth:2.5, backgroundColor:grad,
         fill:true, tension:.4, pointRadius:0, pointHoverRadius:4, pointBackgroundColor:theme.c2 }]},
-      options:{ animation:{duration:500},
+      options:{ animation:{duration:500}, responsive:true, maintainAspectRatio:false,
         plugins:{legend:{display:false}, tooltip:{callbacks:{label:function(c){return c.parsed.y+'%';}}}},
         scales:{ x:{display:false}, y:{display:false, min:0, max:100} } }
     });
@@ -271,6 +271,34 @@ function renderSettings(){
   renderAvatarInto('accountAvatarPreview', 84);
   document.getElementById('accountNameInput').value = (currentUser && currentUser.name) || '';
   document.getElementById('accountEmailStatic').textContent = (currentUser && currentUser.email) || t('guestMode');
+  var th = THEME_LIST.find(function(x){ return x.key===cfg.theme; });
+  document.getElementById('themeChevLabel').textContent = th ? t('th_'+th.key) : '';
+  var l = LANG_LIST.find(function(x){ return x.key===cfg.lang; });
+  document.getElementById('langChevLabel').textContent = l ? l.name : '';
+  renderGenderSeg();
+}
+
+function renderGenderSeg(){
+  var wrap = document.getElementById('genderSeg');
+  if(!wrap) return;
+  var g = (currentUser && currentUser.gender) || null;
+  wrap.querySelectorAll('button').forEach(function(b){ b.classList.toggle('active', b.dataset.gender===g); });
+}
+
+function renderTopHabits(){
+  var row = document.getElementById('topHabitsRow');
+  if(!row) return;
+  var arr = HABITS.map(function(h){ return { h:h, pct: habitAllTimeCompletion(h.id) }; })
+    .filter(function(x){ return x.pct>0; })
+    .sort(function(a,b){ return b.pct-a.pct; }).slice(0,6);
+  row.innerHTML = '';
+  if(!arr.length){ row.innerHTML = '<div class="empty-note" style="padding:10px 4px;">—</div>'; return; }
+  arr.forEach(function(item){
+    var pill = document.createElement('div');
+    pill.className = 'th-pill';
+    pill.innerHTML = '<span class="thicon">'+item.h.icon+'</span><span class="thmeta"><span class="thname">'+escapeHtml(item.h.name)+'</span><span class="thpct">'+item.pct+'%</span></span>';
+    row.appendChild(pill);
+  });
 }
 
 function renderModeButtons(){
@@ -281,10 +309,15 @@ function renderThemeGrid(){
   var grid = document.getElementById('themeGrid');
   grid.innerHTML = '';
   THEME_LIST.forEach(function(th){
+    var locked = th.premium && !(currentUser && currentUser.isPremium);
     var card = document.createElement('div');
     card.className = 'theme-card' + (cfg.theme===th.key?' active':'');
-    card.innerHTML = '<div class="theme-swatch" style="background:linear-gradient(135deg,'+th.c1+','+th.c2+')"></div><div class="tname">'+t('th_'+th.key)+'</div>';
-    card.onclick = function(){ cfg.theme=th.key; saveProfile(); applyTheme(); renderThemeGrid(); renderAll(); };
+    card.innerHTML = '<div class="theme-swatch" style="background:linear-gradient(135deg,'+th.c1+','+th.c2+')"></div><div class="tname">'+t('th_'+th.key)+'</div>'+
+      (locked ? '<div class="plock">👑</div>' : '');
+    card.onclick = function(){
+      if(locked){ openModal('paywallModal'); return; }
+      cfg.theme=th.key; saveProfile(); applyTheme(); renderThemeGrid(); renderAll();
+    };
     grid.appendChild(card);
   });
 }
@@ -308,7 +341,7 @@ function applyTheme(){
 /* ---------------- RENDER ALL ---------------- */
 function renderAll(){
   applyLang();
-  renderHome(); renderChips(); renderHabitList();
+  renderHome(); renderChips(); renderHabitList(); renderTopHabits();
   renderProgressPage();
   renderHabitsPage();
   renderSettings();
