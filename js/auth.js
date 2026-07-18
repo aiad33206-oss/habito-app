@@ -76,7 +76,9 @@ async function onAuthReady(session){
     id: session.user.id,
     email: session.user.email || '',
     name: (session.user.user_metadata && (session.user.user_metadata.full_name || session.user.user_metadata.name)) || '',
-    avatarUrl: null
+    avatarUrl: null,
+    gender: null,
+    isPremium: false
   };
   var ok = await safeAction(async function(){ await loadUserData(currentUser.id); });
   if(!ok) return;
