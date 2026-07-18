@@ -84,15 +84,24 @@ function renderEmojiGrid(){
 function wireAccountModal(){
   document.getElementById('btnOpenAccount').onclick = function(){ renderSettings(); openModal('accountModal'); };
 
+  document.getElementById('genderSeg').querySelectorAll('button').forEach(function(b){
+    b.onclick = function(){
+      if(!currentUser) return;
+      currentUser.gender = (currentUser.gender===b.dataset.gender) ? null : b.dataset.gender;
+      renderGenderSeg();
+    };
+  });
+
   document.getElementById('accountAvatarPreview').onclick = function(){
     document.getElementById('avatarFileInput').click();
   };
   document.getElementById('avatarFileInput').onchange = async function(e){
     var file = e.target.files && e.target.files[0];
     if(!file || !currentUser) return;
-    if(file.size > 4*1024*1024){ toast(t('toastError'), 'err'); return; }
+    if(file.size > 8*1024*1024){ toast(t('toastError'), 'err'); return; }
     var preview = document.getElementById('accountAvatarPreview');
     preview.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;">'+ICONS.upload('icon-lg')+'</div>';
+    preview.querySelector('svg').classList.add('spin');
     var ok = await safeAction(async function(){ await uploadAvatar(file); }, t('profileUpdated'));
     renderAvatarInto('accountAvatarPreview', 84);
     renderAvatarInto('settingsAvatar', 64);
@@ -103,8 +112,9 @@ function wireAccountModal(){
 
   document.getElementById('accountSaveBtn').onclick = async function(){
     var name = document.getElementById('accountNameInput').value.trim();
+    var gender = currentUser ? currentUser.gender : null;
     var btn = this; btn.disabled = true;
-    var ok = await safeAction(async function(){ await updateProfileFields({ display_name: name }); }, t('profileUpdated'));
+    var ok = await safeAction(async function(){ await updateProfileFields({ display_name: name, gender: gender }); }, t('profileUpdated'));
     btn.disabled = false;
     if(ok){ renderSettings(); renderHome(); closeModal('accountModal'); }
   };
@@ -115,6 +125,20 @@ function wireAccountModal(){
     /* Real account deletion requires an admin-privileged server call (service
        role key), which must never be exposed in client-side code. This button
        is wired and ready — see README for the one Edge Function needed. */
+  };
+}
+
+/* ---------------- themes / language / paywall modals ---------------- */
+function wirePreferenceModals(){
+  document.getElementById('btnOpenThemes').onclick = function(){ renderThemeGrid(); openModal('themesModal'); };
+  document.getElementById('btnOpenLanguage').onclick = function(){ renderLangList(); openModal('languageModal'); };
+  document.getElementById('btnUnlockPremium').onclick = async function(){
+    var btn = this; btn.disabled = true;
+    var ok = await safeAction(async function(){
+      await updateProfileFields({ is_premium: true });
+    }, t('premiumUnlocked'));
+    btn.disabled = false;
+    if(ok){ closeModal('paywallModal'); renderThemeGrid(); }
   };
 }
 
