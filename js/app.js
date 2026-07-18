@@ -44,6 +44,7 @@ async function boot(){
   wireLogin();
   wireHabitModal();
   wireAccountModal();
+  wirePreferenceModals();
   wireTermsModal();
   wireBackupModal();
   wireSettingsControls();
