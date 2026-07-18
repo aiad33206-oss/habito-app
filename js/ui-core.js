@@ -66,8 +66,16 @@ function burst(x,y){
     document.body.appendChild(p);
     var ang = Math.random()*Math.PI*2, dist=28+Math.random()*38;
     var dx=Math.cos(ang)*dist, dy=Math.sin(ang)*dist;
-    p.animate([{transform:'translate(0,0) scale(1)',opacity:1},{transform:'translate('+dx+'px,'+dy+'px) scale(0)',opacity:0}],
-      {duration:520+Math.random()*230, easing:'cubic-bezier(.22,1,.36,1)'}).onfinish=function(){ p.remove(); };
+    var dur = 520+Math.random()*230;
+    var removed = false;
+    var remove = function(el){ return function(){ if(!removed){ removed = true; el.remove(); } }; }(p);
+    try{
+      var anim = p.animate([{transform:'translate(0,0) scale(1)',opacity:1},{transform:'translate('+dx+'px,'+dy+'px) scale(0)',opacity:0}],
+        {duration:dur, easing:'cubic-bezier(.22,1,.36,1)', fill:'forwards'});
+      anim.onfinish = remove;
+      anim.oncancel = remove;
+    }catch(e){ /* Web Animations API unavailable — fall back to timeout only */ }
+    setTimeout(remove, dur + 250); // safety net: always clean up even if the animation event never fires
   }
 }
 
