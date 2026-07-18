@@ -31,6 +31,8 @@ async function loadUserData(userId){
     cfg.lang  = profRes.data.lang  || cfg.lang;
     currentUser.name = profRes.data.display_name || currentUser.name;
     currentUser.avatarUrl = profRes.data.avatar_url || null;
+    currentUser.gender = profRes.data.gender || null;
+    currentUser.isPremium = !!profRes.data.is_premium;
   }
 
   var habRes = await sb.from('habits').select('*').eq('user_id', userId).order('sort_order', {ascending:true});
@@ -63,17 +65,48 @@ async function updateProfileFields(fields){
   if(res.error) throw res.error;
   if(fields.display_name !== undefined) currentUser.name = fields.display_name;
   if(fields.avatar_url !== undefined) currentUser.avatarUrl = fields.avatar_url;
+  if(fields.gender !== undefined) currentUser.gender = fields.gender;
+  if(fields.is_premium !== undefined) currentUser.isPremium = fields.is_premium;
 }
 
 async function uploadAvatar(file){
-  var ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
-  var path = currentUser.id + '/avatar.' + ext;
-  var up = await sb.storage.from(HABITO_CONFIG.AVATAR_BUCKET).upload(path, file, { upsert:true, cacheControl:'3600' });
+  var blob = await downscaleImageToJpeg(file, 480);
+  var path = currentUser.id + '/avatar.jpg';
+  var up = await sb.storage.from(HABITO_CONFIG.AVATAR_BUCKET).upload(path, blob, {
+    upsert:true, cacheControl:'3600', contentType:'image/jpeg'
+  });
   if(up.error) throw up.error;
   var pub = sb.storage.from(HABITO_CONFIG.AVATAR_BUCKET).getPublicUrl(path);
   var url = pub.data.publicUrl + '?t=' + Date.now();
   await updateProfileFields({ avatar_url: url });
   return url;
+}
+
+/* Re-encode any picked image (incl. HEIC/large camera photos) into a
+   square JPEG. This fixes two real problems: (1) some formats a phone's
+   camera produces (e.g. HEIC) can't be displayed by <img> in most
+   browsers even though the upload itself "succeeds" — so the photo
+   silently never appears; (2) multi-MB camera photos are slow to upload
+   and needlessly large for a small avatar. */
+function downscaleImageToJpeg(file, size){
+  return new Promise(function(resolve, reject){
+    var img = new Image();
+    var url = URL.createObjectURL(file);
+    img.onload = function(){
+      URL.revokeObjectURL(url);
+      var side = Math.min(img.width, img.height);
+      var sx = (img.width-side)/2, sy = (img.height-side)/2;
+      var canvas = document.createElement('canvas');
+      canvas.width = size; canvas.height = size;
+      var ctx = canvas.getContext('2d');
+      ctx.drawImage(img, sx, sy, side, side, 0, 0, size, size);
+      canvas.toBlob(function(blob){
+        if(blob) resolve(blob); else reject(new Error('encode-failed'));
+      }, 'image/jpeg', 0.85);
+    };
+    img.onerror = function(){ URL.revokeObjectURL(url); reject(new Error('unsupported-image-format')); };
+    img.src = url;
+  });
 }
 
 function getDay(key){ return log[key] || {}; }
