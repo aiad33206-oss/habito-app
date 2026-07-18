@@ -83,6 +83,9 @@
       </div>
     </div>
 
+    <div class="section-title" style="margin-top:18px;"><span data-i18n="topHabits">Top Habits</span></div>
+    <div class="top-habits-row" id="topHabitsRow"></div>
+
     <div class="section-title"><span data-i18n="todayHabits">Today's Habits</span><span class="cap" id="habitsCap">0/0</span></div>
     <div class="chip-row" id="chipRow"></div>
     <div class="habit-list" id="habitList"></div>
@@ -105,7 +108,7 @@
     <div class="section-title"><span data-i18n="progressFlow">Progress Flow</span><span class="cap" data-i18n="last30">Last 30 days</span></div>
     <div class="card flow-card">
       <div class="flow-head"><span class="flbl" data-i18n="statWeek">7-Day Average</span><span class="fval" id="flowVal">0%</span></div>
-      <canvas id="flowChart" height="130"></canvas>
+      <div class="flow-chart-wrap"><canvas id="flowChart"></canvas></div>
     </div>
 
     <div class="section-title"><span data-i18n="momentum">Momentum</span><span class="cap" id="momentumCap">—</span></div>
@@ -151,9 +154,9 @@
     </div>
 
     <div class="profile-card">
-      <div class="avatar-wrap">
+      <div class="avatar-wrap" id="btnOpenAccount" style="cursor:pointer;">
         <div class="avatar" id="settingsAvatar" style="font-size:20px;"></div>
-        <div class="avatar-edit-badge" data-icon="pencil"></div>
+        <div class="avatar-edit-badge" data-icon="pencil" style="pointer-events:none;"></div>
       </div>
       <div><div class="profile-name" id="settingsName">Guest</div><div class="profile-email" id="settingsEmail">—</div></div>
     </div>
@@ -164,22 +167,21 @@
     </div>
 
     <div class="settings-group">
-      <div class="settings-label" data-i18n="theme">Theme</div>
-      <div class="theme-grid" id="themeGrid"></div>
-    </div>
-
-    <div class="settings-group">
-      <div class="settings-label" data-i18n="language">Language</div>
-      <div class="lang-list" id="langList"></div>
+      <div class="menu-list">
+        <div class="menu-item" id="btnOpenThemes">
+          <div class="miconwrap" data-icon="palette"></div><div class="mname" data-i18n="theme">Theme</div>
+          <div class="chev" id="themeChevLabel" style="font-size:11px; font-weight:600;"></div>
+        </div>
+        <div class="menu-item" id="btnOpenLanguage">
+          <div class="miconwrap" data-icon="globe"></div><div class="mname" data-i18n="language">Language</div>
+          <div class="chev" id="langChevLabel" style="font-size:11px; font-weight:600;"></div>
+        </div>
+      </div>
     </div>
 
     <div class="settings-group">
       <div class="settings-label" data-i18n="account">Account</div>
       <div class="menu-list">
-        <div class="menu-item" id="btnOpenAccount">
-          <div class="miconwrap" data-icon="user"></div><div class="mname" data-i18n="editProfile">Edit Profile</div>
-          <div class="chev" data-icon="chevronRight"></div>
-        </div>
         <div class="menu-item" id="btnOpenBackup">
           <div class="miconwrap" data-icon="download"></div><div class="mname" data-i18n="backupRestore">Backup &amp; Restore</div>
           <div class="chev" data-icon="chevronRight"></div>
@@ -209,6 +211,43 @@
     <button class="tab-btn" data-page="pageHabits"><span data-icon="check"></span><span data-i18n="navHabits">Habits</span></button>
     <button class="tab-btn" data-page="pageSettings"><span data-icon="gear"></span><span data-i18n="navSettings">Settings</span></button>
   </nav>
+</div>
+
+<!-- ============ THEMES MODAL ============ -->
+<div class="modal-backdrop" id="themesModal">
+  <div class="modal-sheet">
+    <div class="modal-head"><div class="modal-title" data-i18n="theme">Theme</div>
+      <button class="modal-close" data-close="themesModal" data-icon="close"></button></div>
+    <div class="theme-grid" id="themeGrid"></div>
+  </div>
+</div>
+
+<!-- ============ LANGUAGE MODAL ============ -->
+<div class="modal-backdrop" id="languageModal">
+  <div class="modal-sheet">
+    <div class="modal-head"><div class="modal-title" data-i18n="language">Language</div>
+      <button class="modal-close" data-close="languageModal" data-icon="close"></button></div>
+    <div class="lang-list" id="langList"></div>
+  </div>
+</div>
+
+<!-- ============ PAYWALL MODAL ============ -->
+<div class="modal-backdrop" id="paywallModal">
+  <div class="modal-sheet" style="text-align:center; background:linear-gradient(180deg, var(--surface), var(--surface) 40%, var(--a1-soft));">
+    <div class="modal-head"><div class="modal-title" data-i18n="premiumTitle">Habito Premium</div>
+      <button class="modal-close" data-close="paywallModal" data-icon="close"></button></div>
+    <div style="width:64px; height:64px; border-radius:20px; background:linear-gradient(135deg,#B8860B,#F5D485); margin:6px auto 16px; display:flex; align-items:center; justify-content:center; font-size:28px; box-shadow:0 12px 30px -8px #B8860B;">👑</div>
+    <div style="font-size:13.5px; color:var(--text-mid); max-width:280px; margin:0 auto 18px; line-height:1.7;" data-i18n="premiumSub">Unlock exclusive themes and pro features to take your habits further.</div>
+    <div style="text-align:left; display:flex; flex-direction:column; gap:11px; margin-bottom:20px;">
+      <div style="display:flex; gap:10px; align-items:flex-start;"><span style="color:var(--a1);">✓</span><span style="font-size:12.5px;" data-i18n="premF1">2 exclusive premium themes (Aurora &amp; Gold)</span></div>
+      <div style="display:flex; gap:10px; align-items:flex-start;"><span style="color:var(--a1);">✓</span><span style="font-size:12.5px;" data-i18n="premF2">Unlimited custom habits (free plan: 12)</span></div>
+      <div style="display:flex; gap:10px; align-items:flex-start;"><span style="color:var(--a1);">✓</span><span style="font-size:12.5px;" data-i18n="premF3">Advanced analytics &amp; full history export</span></div>
+      <div style="display:flex; gap:10px; align-items:flex-start;"><span style="color:var(--a1);">✓</span><span style="font-size:12.5px;" data-i18n="premF4">Custom reminder times per habit</span></div>
+      <div style="display:flex; gap:10px; align-items:flex-start;"><span style="color:var(--a1);">✓</span><span style="font-size:12.5px;" data-i18n="premF5">Habito badge-free profile</span></div>
+    </div>
+    <button class="btn primary" id="btnUnlockPremium" style="width:100%;" data-i18n="premiumCta">Upgrade to Premium</button>
+    <div style="font-size:10px; color:var(--text-low); margin-top:12px; line-height:1.6;" data-i18n="premiumNote">Demo unlock for preview — real billing connects here once published.</div>
+  </div>
 </div>
 
 <!-- ============ HABIT MODAL ============ -->
@@ -255,6 +294,12 @@
       <div style="font-size:10.5px; color:var(--text-low); margin-top:8px;" data-i18n="changePhoto">Change photo</div>
     </div>
     <div class="form-field"><label data-i18n="displayName">Display name</label><input type="text" id="accountNameInput" maxlength="40"></div>
+    <div class="form-field"><label data-i18n="gender">Gender</label>
+      <div class="seg" id="genderSeg">
+        <button type="button" data-gender="male" data-i18n="male">Male</button>
+        <button type="button" data-gender="female" data-i18n="female">Female</button>
+      </div>
+    </div>
     <div class="form-field"><label data-i18n="emailAddr">Email address</label>
       <div id="accountEmailStatic" style="padding:12px 14px; border-radius:14px; background:var(--surface-2); color:var(--text-mid); font-size:13px;">—</div></div>
     <div class="form-actions">
